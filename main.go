@@ -9,21 +9,19 @@ import (
 func main() {
 	r := ama.New()
 
-	r.GET("/", func(w http.ResponseWriter, req *http.Request) {
-		_, err := fmt.Fprintf(w, "URL.Path = %q\n", req.URL.Path)
-		if err != nil {
-			fmt.Println("URL.Path err:", err)
-		}
+	r.GET("/", func(c *ama.Context) {
+		c.HTML(http.StatusOK, "<h2>Hello Amazilia</h2>")
 	})
 
-	r.GET("/hello", func(w http.ResponseWriter, req *http.Request) {
-		for k, v := range req.Header {
-			_, err := fmt.Fprintf(w, "Header[%q] = %q\n", k, v)
-			if err != nil {
-				fmt.Println("Header err:", err)
-			}
-		}
+	r.GET("/hello", func(c *ama.Context) {
+		c.String(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
+	})
 
+	r.POST("/login", func(c *ama.Context) {
+		c.JSON(http.StatusOK, ama.H{
+			"username": c.PostForm("username"),
+			"password": c.PostForm("password"),
+		})
 	})
 
 	err := r.Run(":8080")
