@@ -9,6 +9,9 @@ import (
 // JSON 数据
 type H map[string]interface{}
 
+// 根据请求 *http.Request，构造响应 http.ResponseWriter
+// 一个完整的响应，需要考虑消息头(Header)和消息体(Body)，而 Header 包含了状态码(StatusCode)，消息类型(ContentType)等
+
 // 设计上下文 Context，封装 Request 和 Response ，
 // 提供对 JSON、HTML 等返回类型的支持
 type Context struct {
@@ -23,6 +26,10 @@ type Context struct {
 	Path string
 	Method string
 
+	// 解析到的参数
+	// {lang: "go"} {filepath: "css/style.css"}
+	Params map[string]string
+
 	// 响应信息
 	StatusCode int
 }
@@ -34,6 +41,12 @@ func newContext(w http.ResponseWriter, req *http.Request) *Context {
 		Path: req.URL.Path,
 		Method: req.Method,
 	}
+}
+
+// 获取路由参数
+func (c *Context) Param(key string) string {
+	value, _ := c.Params[key]
+	return value
 }
 
 // 获取 form values
