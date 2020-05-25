@@ -9,15 +9,22 @@ type HandlerFunc func(*Context)
 
 // 实现 http Handler 接口
 type Engine struct{
+	*RouterGroup
+
 	// 路由映射 map
 	router *router
+
+	// 存储所有分组
+	groups []*RouterGroup
 }
 
 // 构造 Engine
 func New() *Engine {
-	return &Engine{
-		router: newRouter(),
-	}
+	engine := &Engine{router: newRouter()}
+	engine.RouterGroup = &RouterGroup{engine: engine}
+	engine.groups = []*RouterGroup{engine.RouterGroup}
+
+	return engine
 }
 
 // 添加路由
