@@ -88,15 +88,21 @@ func (r *router) getRouter(method string, path string) (*node, map[string]string
 	return nil, nil
 }
 
+// 从路由匹配得到的 Handler 添加到 c.handlers 列表中
 // 解析请求的路径，查找路由映射表，匹配路由规则，查找到对应的 handler
 // 如果查到，就执行注册的处理方法。如果查不到，就返回 404 NOT FOUND
 func (r *router) handle(c *Context) {
 	n, params := r.getRouter(c.Method, c.Path)
+
 	if n != nil {
 		c.Params = params
 		key := c.Method + "-" + n.pattern
-		r.handlers[key](c)
+		c.handlers = append(c.handlers, r.handlers[key])
 	} else {
-		c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+		c.handlers = append(c.handlers, func(c *Context) {
+			c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+		})
 	}
+
+	c.Next()
 }

@@ -2,6 +2,7 @@ package ama
 
 import (
 	"net/http"
+	"strings"
 )
 
 // 定义路由映射的处理方法为 handler 类型，
@@ -58,6 +59,16 @@ func (engine *Engine) Run(addr string) (err error) {
 // w：构造针对请求的响应
 // req：包含 HTTP 请求的索引信息，请求地址、Header、Body等
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+
+	// 接收到一个具体请求时，要判断该请求适用于哪些中间件
+	var middleWares []HandlerFunc
+	for _, group := range engine.groups {
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			middleWares = append(middleWares, group.middleWares...)
+		}
+	}
+
 	c := newContext(w, req)
+	c.handlers = middleWares
 	engine.router.handle(c)
 }

@@ -8,7 +8,7 @@ type RouterGroup struct {
 	prefix string
 
 	// 中间件
-	middlewares []HandlerFunc
+	middleWares []HandlerFunc
 
 	// 分组嵌套的父分组
 	parent *RouterGroup
@@ -45,4 +45,9 @@ func (g *RouterGroup) GET(pattern string, handler HandlerFunc) {
 // POST 请求
 func (g *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	g.addRouter("POST", pattern, handler)
+}
+
+// 添加中间件到群组
+func (g *RouterGroup) Use(middleWares ...HandlerFunc) {
+	g.middleWares = append(g.middleWares, middleWares...)
 }

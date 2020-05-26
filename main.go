@@ -9,6 +9,8 @@ import (
 func main() {
 	r := ama.New()
 
+	// 全局中间件
+	r.Use(ama.Logger())
 	r.GET("/index", func(c *ama.Context) {
 		c.HTML(http.StatusOK, "<h2>Hello Ama</h2>")
 	})
@@ -45,6 +47,7 @@ func main() {
 	})
 
 	g2 := r.Group("/g2")
+	g2.Use(ama.LoggerForG2())
 	// http://localhost:8080/g2/hello/hehe
 	g2.GET("/hello/:name", func(c *ama.Context) {
 		c.String(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)

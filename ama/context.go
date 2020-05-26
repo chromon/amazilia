@@ -32,6 +32,11 @@ type Context struct {
 
 	// 响应信息
 	StatusCode int
+
+	// 中间件
+	handlers []HandlerFunc
+	// 记录当前执行到第几个中间件
+	index int
 }
 
 func newContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -40,7 +45,38 @@ func newContext(w http.ResponseWriter, req *http.Request) *Context {
 		Req: req,
 		Path: req.URL.Path,
 		Method: req.Method,
+		index: -1,
 	}
+}
+
+// 中间件等待用户自己定义的 Handler 处理结束后，再做一些额外的操作
+// 当在中间件中调用 Next 方法时，控制权交给了下一个中间件，直到调用到最后一个中间件，
+// 然后再从后往前返回，调用每个中间件在 Next 方法之后定义的部分。
+/*
+	func A(c *Context) {
+		part1
+		c.Next()
+		part2
+	}
+	func B(c *Context) {
+		part3
+		c.Next()
+		part4
+	}
+	假设我们应用了中间件 A 和 B，和路由映射的 Handler。c.handlers是这样的[A, B, Handler]，c.index初始化为-1。调用c.Next()
+	最终的顺序是part1 -> part3 -> Handler -> part 4 -> part2
+*/
+func (c *Context) Next() {
+	c.index++
+	s := len(c.handlers)
+	for ; c.index < s; c.index++ {
+		c.handlers[c.index](c)
+	}
+}
+
+func (c *Context) Fail(code int, err string) {
+	c.index = len(c.handlers)
+	c.JSON(code, H{"message": err})
 }
 
 // 获取路由参数
