@@ -1,6 +1,7 @@
 package ama
 
 import (
+	"html/template"
 	"net/http"
 	"strings"
 )
@@ -17,6 +18,12 @@ type Engine struct{
 
 	// 存储所有分组
 	groups []*RouterGroup
+
+	// html 模板渲染
+	// 将所有的模板加载进内存
+	htmlTemplates *template.Template
+	// 所有自定义模板渲染函数
+	funcMap template.FuncMap
 }
 
 // 构造 Engine
@@ -50,6 +57,17 @@ func (engine *Engine) POST(pattern string, handler HandlerFunc) {
 	engine.addRouter("POST", pattern, handler)
 }
 
+// 设置自定义渲染函数
+func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
+	engine.funcMap = funcMap
+}
+
+// 设置加载模板的方法
+func (engine *Engine) LoadHTMLGlob(pattern string) {
+	engine.htmlTemplates = template.Must(
+		template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
+}
+
 // 启动 http server
 func (engine *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, engine)
@@ -70,5 +88,6 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	c := newContext(w, req)
 	c.handlers = middleWares
+	c.engine = engine
 	engine.router.handle(c)
 }

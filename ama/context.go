@@ -37,6 +37,8 @@ type Context struct {
 	handlers []HandlerFunc
 	// 记录当前执行到第几个中间件
 	index int
+
+	engine *Engine
 }
 
 func newContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -136,11 +138,11 @@ func (c *Context) Data(code int, data []byte) {
 }
 
 // 构造 HTML 响应内容
-func (c *Context) HTML(code int, html string) {
+func (c *Context) HTML(code int, name string, data interface{}) {
 	c.SetHeader("Content-Type", "text/html")
 	c.Status(code)
-	_, err := c.Writer.Write([]byte(html))
+	err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data)
 	if err != nil {
-		fmt.Println("writer write err:", err)
+		c.Fail(500, err.Error())
 	}
 }
