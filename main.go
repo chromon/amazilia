@@ -103,6 +103,13 @@ func main() {
 		})
 	})
 
+	// -- test panic recover --
+	// {"message":"Internal Server Error"}
+	r.GET("/panic", func (c *ama.Context) {
+		names := []string{"abcde"}
+		c.String(http.StatusOK, names[20])
+	})
+
 	err := r.Run(":8080")
 	if err != nil {
 		fmt.Println("Run server err:", err)
